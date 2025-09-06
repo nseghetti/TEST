@@ -15,23 +15,34 @@ if (-not (Test-Path 'docker-compose.yml')) {
 Write-Host "Initializing listmonk (compose at: $((Resolve-Path 'docker-compose.yml').Path))" -ForegroundColor Cyan
 
 # Check Docker availability
+try { docker --version | Out-Null } catch { throw "Docker is not available. Install/start Docker Desktop." }
+
+# Detect compose (v2 preferred, fallback to v1)
+$script:UseV2 = $true
 try {
-  docker --version | Out-Null
   docker compose version | Out-Null
 } catch {
-  throw "Docker Desktop or docker compose is not available. Please install/start Docker Desktop."
+  try {
+    docker-compose --version | Out-Null
+    $script:UseV2 = $false
+  } catch {
+    throw "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is available."
+  }
 }
 
-if ($Recreate) {
-  docker compose down -v
+function Compose {
+  param([Parameter(ValueFromRemainingArguments = $true)][object[]]$Args)
+  if ($script:UseV2) { docker compose @Args } else { docker-compose @Args }
 }
+
+if ($Recreate) { Compose down -v }
 
 if (-not (Test-Path '.env')) {
   Write-Host "Hint: .env not found. Copy .env.example to .env" -ForegroundColor Yellow
 }
 
 # Ensure DB is up
-docker compose up -d db
+Compose up -d db
 
 # Wait for db health
 Write-Host "Waiting for database to become healthy..." -ForegroundColor Yellow
@@ -46,13 +57,13 @@ if ($i -ge $max) { Write-Warning "Database did not become healthy in time; conti
 
 Write-Host "Running one-time installation..." -ForegroundColor Yellow
 try {
-  docker compose run --rm app ./listmonk --install --yes
+  Compose run --rm app ./listmonk --install --yes
 } catch {
   Write-Warning "Install failed (possibly already installed). Proceeding to start the app."
 }
 
 Write-Host "Starting app..." -ForegroundColor Green
-docker compose up -d app
+Compose up -d app
 
 # PowerShell 5.1 compatibility: avoid null-coalescing operator
 $port = $env:LISTMONK_PORT

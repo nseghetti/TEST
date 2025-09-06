@@ -12,11 +12,24 @@ if (-not (Test-Path 'docker-compose.yml')) {
   throw "docker-compose.yml not found in $projectRoot."
 }
 
+try { docker --version | Out-Null } catch { throw "Docker is not available. Install/start Docker Desktop." }
+
+# Detect compose (v2 preferred, fallback to v1)
+$script:UseV2 = $true
 try {
-  docker --version | Out-Null
   docker compose version | Out-Null
 } catch {
-  throw "Docker Desktop or docker compose is not available."
+  try {
+    docker-compose --version | Out-Null
+    $script:UseV2 = $false
+  } catch {
+    throw "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is available."
+  }
+}
+
+function Compose {
+  param([Parameter(ValueFromRemainingArguments = $true)][object[]]$Args)
+  if ($script:UseV2) { docker compose @Args } else { docker-compose @Args }
 }
 
 if (-not (Test-Path '.env')) {
@@ -24,7 +37,7 @@ if (-not (Test-Path '.env')) {
 }
 
 Write-Host "Starting listmonk services (db + app)..." -ForegroundColor Cyan
-docker compose up -d db app
+Compose up -d db app
 
 # PowerShell 5.1 compatibility: avoid inline if expression
 $port = $env:LISTMONK_PORT
@@ -33,5 +46,5 @@ Write-Host ("Open http://localhost:{0}" -f $port) -ForegroundColor Green
 
 if ($Logs) {
   Write-Host "Tailing app logs (Ctrl+C to stop)..." -ForegroundColor Yellow
-  docker compose logs -f app
+  Compose logs -f app
 }

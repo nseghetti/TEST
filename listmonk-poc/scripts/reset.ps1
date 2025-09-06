@@ -11,11 +11,24 @@ if (-not (Test-Path 'docker-compose.yml')) {
   throw "docker-compose.yml not found in $projectRoot."
 }
 
+try { docker --version | Out-Null } catch { throw "Docker is not available. Install/start Docker Desktop." }
+
+# Detect compose (v2 preferred, fallback to v1)
+$script:UseV2 = $true
 try {
-  docker --version | Out-Null
   docker compose version | Out-Null
 } catch {
-  throw "Docker Desktop or docker compose is not available."
+  try {
+    docker-compose --version | Out-Null
+    $script:UseV2 = $false
+  } catch {
+    throw "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is available."
+  }
+}
+
+function Compose {
+  param([Parameter(ValueFromRemainingArguments = $true)][object[]]$Args)
+  if ($script:UseV2) { docker compose @Args } else { docker-compose @Args }
 }
 
 if (-not $Force) {
@@ -27,6 +40,5 @@ if (-not $Force) {
 }
 
 Write-Host "Stopping and removing containers + volumes..." -ForegroundColor Cyan
-docker compose down -v
+Compose down -v
 Write-Host "Done. You can re-run init with scripts/init.ps1" -ForegroundColor Green
-
