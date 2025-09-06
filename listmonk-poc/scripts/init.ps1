@@ -54,4 +54,7 @@ try {
 Write-Host "Starting app..." -ForegroundColor Green
 docker compose up -d app
 
-Write-Host "Open http://localhost:$($env:LISTMONK_PORT -as [string] ?? '9000')" -ForegroundColor Green
+# PowerShell 5.1 compatibility: avoid null-coalescing operator
+$port = $env:LISTMONK_PORT
+if (-not $port) { $port = '9000' }
+Write-Host ("Open http://localhost:{0}" -f $port) -ForegroundColor Green

@@ -26,11 +26,12 @@ if (-not (Test-Path '.env')) {
 Write-Host "Starting listmonk services (db + app)..." -ForegroundColor Cyan
 docker compose up -d db app
 
-$port = if ($env:LISTMONK_PORT) { $env:LISTMONK_PORT } else { '9000' }
-Write-Host "Open http://localhost:$port" -ForegroundColor Green
+# PowerShell 5.1 compatibility: avoid inline if expression
+$port = $env:LISTMONK_PORT
+if (-not $port) { $port = '9000' }
+Write-Host ("Open http://localhost:{0}" -f $port) -ForegroundColor Green
 
 if ($Logs) {
   Write-Host "Tailing app logs (Ctrl+C to stop)..." -ForegroundColor Yellow
   docker compose logs -f app
 }
-
