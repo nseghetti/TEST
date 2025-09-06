@@ -22,6 +22,10 @@ A minimal Docker Compose setup to evaluate listmonk locally.
 - `docker compose logs -f app` — tail app logs.
 - `docker compose down` — stop containers (use `-v` to remove volumes).
 
+### Windows shortcuts
+- `./scripts/run.ps1` — start DB and app; add `-Logs` to follow logs.
+- `./scripts/reset.ps1` — stop stack and remove volumes (data loss). Use `-Force` to skip prompt.
+
 ## Configuration
 - Adjust `.env` for DB credentials and port.
 - For reverse proxies, set `BASE_URL` and pass through to the app env (see `docker-compose.yml`).
@@ -29,4 +33,3 @@ A minimal Docker Compose setup to evaluate listmonk locally.
 ## Notes
 - Upgrades: after image update, run `docker compose run --rm app ./listmonk --upgrade --yes` if migrations are required.
 - Data persists in the `db-data` Docker volume.
-
