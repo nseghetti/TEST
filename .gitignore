@@ -1,0 +1,40 @@
+# Nested repos and local sandboxes
+TEST/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+coverage/
+htmlcov/
+
+# Node / Web
+node_modules/
+dist/
+build/
+
+# Logs / Cache
+*.log
+logs/
+.cache/
+
+# Docker Compose overrides
+docker-compose.override.yml
+
