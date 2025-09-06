@@ -1,0 +1,13 @@
+# Env & local
+.env
+.env.*
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Docker artifacts
+*.log
+

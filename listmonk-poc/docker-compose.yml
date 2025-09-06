@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: listmonk-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-listmonk}
+      POSTGRES_USER: ${DB_USER:-listmonk}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-listmonk}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-listmonk}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: listmonk/listmonk:latest
+    container_name: listmonk-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${LISTMONK_PORT:-9000}:9000"
+    environment:
+      - LISTMONK_app__address=0.0.0.0:9000
+      - LISTMONK_db__host=db
+      - LISTMONK_db__port=5432
+      - LISTMONK_db__user=${DB_USER:-listmonk}
+      - LISTMONK_db__password=${DB_PASSWORD:-listmonk}
+      - LISTMONK_db__database=${DB_NAME:-listmonk}
+      # Optional: set external URL if accessed behind a proxy
+      # - LISTMONK_app__base_url=${BASE_URL}
+    restart: unless-stopped
+
+volumes:
+  db-data:
+
